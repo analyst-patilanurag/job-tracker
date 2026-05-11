@@ -29,22 +29,42 @@ log = logging.getLogger(__name__)
 
 DB_PATH = Path("data/jobs.db")
 
-# ── ATS optimization rules ─────────────────────────────────────────
-# Baked into every resume generation prompt.
+# ── Resume bullet format rules ─────────────────────────────────────
+# Based on Anurag's actual resume style. Every generated bullet must
+# follow this exact pattern.
 ATS_RULES = """
-ATS OPTIMIZATION RULES (follow strictly):
-1. KEYWORD MIRRORING: Use the exact keywords from the job description (not synonyms).
-   If JD says "machine learning models", write "machine learning models" not "ML algorithms".
-2. QUANTIFY EVERYTHING: Every bullet must have a number, %, timeframe, or scale metric.
-3. ACTION VERBS FIRST: Start every bullet with a strong past-tense verb (Built, Developed,
-   Designed, Led, Implemented, Deployed, Reduced, Improved, Automated, Collaborated).
-4. NO JARGON PADDING: Every word must earn its place. No "leveraged synergies" or "drove value".
-5. SKILLS IN CONTEXT: Don't just list Python — write "Built Python pipelines that processed
-   X million records." Tools must appear in action.
-6. TITLE ECHO: If the job title is "Senior Data Scientist", use "data scientist" naturally
-   in the summary or bullets at least twice.
-7. FORMAT: Plain text bullets. No tables, no columns, no headers with special characters.
-8. LENGTH: 3-5 bullets per role. Each bullet 1-2 lines max.
+BULLET FORMAT RULES (match exactly):
+
+1. ACTION VERB FIRST: Start with a strong past-tense verb.
+   Good verbs: Designed, Built, Implemented, Trained, Automated, Led, Collaborated,
+               Utilized, Spearheaded, Optimized, Deployed, Developed.
+
+2. TOOLS IN CONTEXT: Never list tools alone. Show them doing work.
+   BAD:  "Used Python and SQL."
+   GOOD: "Built Python machine learning pipelines for patient data transformation."
+
+3. QUANTIFY WITH SPECIFICS: Every bullet needs a real metric — %, count, time, or scale.
+   BAD:  "Improved performance."
+   GOOD: "Cutting analytical turnaround time by 40% across 5 research projects."
+   GOOD: "Reducing target identification time across 3+ therapeutic areas."
+
+4. KEYWORD MIRROR: Use the job description's exact phrasing — not synonyms.
+   If JD says "machine learning models" write "machine learning models", not "ML algorithms".
+
+5. LENGTH: One sentence per bullet, max two lines. No sub-bullets.
+
+6. PROFESSIONAL SUMMARY: 2 sentences. First: role + years + core skills.
+   Second: domain expertise and value delivered. Use exact keywords from JD.
+
+EXAMPLE BULLETS (from Anurag's actual resume — match this style):
+- "Designed and implemented an indication-finding analytical framework for drug development
+   using embeddings, cosine similarity, and ranked scoring, reducing target identification
+   time across 3+ therapeutic areas."
+- "Built Python machine learning pipelines for patient data transformation and causal
+   inference, deploying a Propensity Score Matching package on GitHub used across
+   2 internal research teams."
+- "Automated hypothesis testing workflows in Python using Chi-square and z-tests within
+   an OOP framework, cutting analytical turnaround time by 40% across 5 research projects."
 """
 
 # ── Candidate experience ───────────────────────────────────────────
@@ -84,18 +104,47 @@ TensorFlow, Scikit-learn, NumPy, Pandas, Statsmodels, Scipy, Matplotlib, Plotly,
 """
 
 # ── Cover letter style ─────────────────────────────────────────────
+# Based on Anurag's actual cover letter (Lyft application).
 COVER_LETTER_STYLE = """
-COVER LETTER STYLE GUIDELINES:
-- Warm, confident, narrative tone — not corporate stiff
-- 3-4 short paragraphs max
-- Para 1: Why THIS company/role specifically (not generic)
-- Para 2: The 1-2 most relevant experiences that directly map to their needs
-- Para 3: The differentiator — what makes the candidate unusual for this role
-- Para 4: Brief close, thank you
+COVER LETTER FORMAT (follow exactly):
+
+OPENING: "Dear Hiring Team,"
+
+PARAGRAPH 1 — Why THIS company/role (3-4 sentences):
+- Open with a specific detail about the company or team — not generic praise
+- Name what drew you to this specific role/mission
+- Connect it to the work you have been doing
+- End with why this feels like the natural next step
+
+PARAGRAPH 2 — Relevant experience (4-5 sentences):
+- Lead with your most directly relevant experience for THIS job
+- Name specific tools, methods, and outcomes with numbers
+- Reference a second role/experience that maps to another requirement
+- Be specific — mention actual techniques (propensity score matching, NLP, Spark, etc.)
+
+PARAGRAPH 3 — The differentiator (3-4 sentences):
+- What makes Anurag unusual or unexpected for this role
+- Turn a potential weakness into a strength (e.g., clinical background for a tech role)
+- Show a unique angle that other candidates won't have
+
+PARAGRAPH 4 — Close (2 sentences):
+- Thank them briefly
+- Express interest in a conversation
+
+SIGN-OFF: "Warmly,\nAnurag Patil"
+
+STRICT RULES:
 - Never use: "I am writing to express my interest", "I believe I would be a great fit",
-  "Please find attached", "Do not hesitate to contact me"
-- Do use: specific role name, specific company name, one specific detail from the JD
-- Length: ~300-350 words
+  "Please find attached", "Do not hesitate to contact me", "passion for"
+- Always use: specific company name, specific role name, at least one specific detail from JD
+- Tone: confident and warm — like a smart colleague, not a formal applicant
+- Length: 300-350 words exactly
+
+EXAMPLE OPENING (match this style, not this content):
+"Google Health and Fitbit sit at a rare intersection --- consumer technology with genuine
+clinical stakes. When I read about the Health Data Science Team's mission to make everyone
+in the world healthier by illuminating consumer and product understanding, I recognized
+the exact problem I've been working on from the clinical side."
 """
 
 
@@ -173,7 +222,7 @@ INTERVIEW ANGLE: {fit_reasoning.get('interview_angle', '')}
 KEY MATCHES: {json.dumps(fit_reasoning.get('top_matches', []))}
 
 Write the complete cover letter text only. No subject line, no date, no address block.
-Start with "Hi," or "Dear Hiring Team," — keep it human."""
+Start with "Dear Hiring Team," and end with "Warmly,\nAnurag Patil"."""
 
     try:
         bullets_resp = client.messages.create(
