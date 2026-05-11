@@ -38,23 +38,23 @@ DB_PATH = Path("data/jobs.db")
 SEARCH_CONFIGS = [
     {
         "label": "Data Scientist - USA",
-        "url": "https://www.linkedin.com/jobs/search/?keywords=Data%20Scientist&location=United%20States&f_TPR=r86400",
+        "url": "https://www.linkedin.com/jobs/search/?keywords=data%20scientist&f_TPR=r86400",
     },
     {
         "label": "Data Analyst - USA",
-        "url": "https://www.linkedin.com/jobs/search/?keywords=Data%20Analyst&location=United%20States&f_TPR=r86400",
+        "url": "https://www.linkedin.com/jobs/search/?keywords=data%20analyst&f_TPR=r86400",
     },
     {
         "label": "ML Engineer - USA",
-        "url": "https://www.linkedin.com/jobs/search/?keywords=Machine%20Learning%20Engineer&location=United%20States&f_TPR=r86400",
+        "url": "https://www.linkedin.com/jobs/search/?keywords=machine%20learning%20engineer&f_TPR=r86400",
     },
     {
         "label": "Analytics Lead - USA",
-        "url": "https://www.linkedin.com/jobs/search/?keywords=Analytics%20Lead&location=United%20States&f_TPR=r86400",
+        "url": "https://www.linkedin.com/jobs/search/?keywords=analytics%20lead&f_TPR=r86400",
     },
     {
         "label": "Data Scientist Healthcare - USA",
-        "url": "https://www.linkedin.com/jobs/search/?keywords=Data%20Scientist%20Healthcare&location=United%20States&f_TPR=r86400",
+        "url": "https://www.linkedin.com/jobs/search/?keywords=data%20scientist%20healthcare&f_TPR=r86400",
         "title_filter": ["data scientist"],
     },
 ]
@@ -176,13 +176,15 @@ def extract_salary_text(text: str) -> str:
 
 def fetch_jobs_from_search(config: dict, cookies: dict) -> list[dict]:
     """Scrape job listings using LinkedIn's guest jobs API."""
-    params = parse_qs(urlparse(config["url"]).query)
-    keywords = params.get("keywords", [""])[0]
-    location = params.get("location", ["United States"])[0]
+    parsed = urlparse(config["url"])
+    params = parse_qs(parsed.query)
 
+    # Build guest API URL preserving all filters from the search URL (f_TPR, f_E, etc.)
+    query_params = {k: v[0] for k, v in params.items()}
+    query_params["start"] = "0"
+    query_string = "&".join(f"{k}={quote(str(v))}" for k, v in query_params.items())
     guest_url = (
-        "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
-        f"?keywords={quote(keywords)}&location={quote(location)}&start=0"
+        f"https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?{query_string}"
     )
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
