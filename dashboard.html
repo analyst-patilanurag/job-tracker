@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Tracker — Anurag Patil</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222c;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e6f0;
+    --muted: #8a8799;
+    --prime: #10b981;
+    --prime-dim: rgba(16,185,129,0.12);
+    --strong: #6366f1;
+    --strong-dim: rgba(99,102,241,0.12);
+    --explore: #f59e0b;
+    --explore-dim: rgba(245,158,11,0.12);
+    --skip: #374151;
+    --skip-dim: rgba(55,65,81,0.3);
+    --danger: #ef4444;
+    --accent: #a78bfa;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'DM Sans', system-ui, sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo h1 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text);
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .sidebar-logo p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-weight: 300;
+  }
+
+  .nav-section {
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .nav-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    padding: 0 8px;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--muted);
+    font-weight: 400;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-body);
+    font-size: 13px;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .count-badge {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 1px 7px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .topbar h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .topbar-actions { margin-left: auto; display: flex; gap: 10px; }
+
+  .btn {
+    padding: 7px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+
+  .btn:hover { background: var(--border2); border-color: var(--accent); }
+
+  .btn-prime {
+    background: var(--prime-dim);
+    border-color: var(--prime);
+    color: var(--prime);
+  }
+
+  .btn-prime:hover { background: rgba(16,185,129,0.2); }
+
+  /* ── Content ── */
+  .content { padding: 24px 28px; flex: 1; overflow-y: auto; }
+
+  /* ── Stats row ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-accent { font-size: 11px; margin-top: 6px; font-weight: 500; }
+
+  /* ── Filters ── */
+  .filters-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-chip {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-chip:hover, .filter-chip.active {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(167,139,250,0.08);
+  }
+
+  .search-input {
+    margin-left: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* ── Job table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    background: var(--surface2);
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .job-title {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .job-title:hover { color: var(--accent); }
+
+  .job-company { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .job-location { font-size: 12px; color: var(--muted); }
+
+  /* Category pills */
+  .cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .cat-PRIME { background: var(--prime-dim); color: var(--prime); border: 1px solid rgba(16,185,129,0.3); }
+  .cat-STRONG { background: var(--strong-dim); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+  .cat-EXPLORE { background: var(--explore-dim); color: var(--explore); border: 1px solid rgba(245,158,11,0.3); }
+  .cat-SKIP { background: var(--skip-dim); color: #9ca3af; border: 1px solid rgba(55,65,81,0.4); }
+
+  /* Score bar */
+  .score-wrap { display: flex; align-items: center; gap: 8px; }
+  .score-bar {
+    width: 60px; height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .score-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .score-num { font-size: 12px; color: var(--muted); min-width: 24px; }
+
+  /* Status select */
+  .status-select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .status-select:focus { border-color: var(--accent); }
+
+  .action-btn {
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+  }
+
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Modal / Detail Panel ── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    backdrop-filter: blur(2px);
+  }
+
+  .overlay.open { display: flex; align-items: flex-start; justify-content: flex-end; }
+
+  .detail-panel {
+    width: 560px;
+    height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 28px;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(40px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  .panel-close {
+    float: right;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .panel-close:hover { color: var(--text); }
+
+  .panel-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    color: var(--text);
+    letter-spacing: -0.4px;
+    margin: 8px 0 4px;
+    line-height: 1.2;
+  }
+
+  .panel-meta {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .panel-section {
+    margin-bottom: 22px;
+  }
+
+  .panel-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .match-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--prime-dim);
+    color: var(--prime);
+    font-size: 11px;
+    margin: 3px 3px 3px 0;
+    border: 1px solid rgba(16,185,129,0.2);
+  }
+
+  .gap-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--explore-dim);
+    color: var(--explore);
+    font-size: 11px;
+    margin: 3px 3px 3px 0;
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+
+  .insight-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .resume-bullet {
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.6;
+    border: 1px solid var(--border);
+  }
+
+  .resume-bullet::before {
+    content: "•  ";
+    color: var(--prime);
+  }
+
+  .cover-letter-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.8;
+    white-space: pre-wrap;
+  }
+
+  .copy-btn {
+    margin-top: 8px;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-body);
+  }
+
+  .copy-btn:hover { color: var(--prime); border-color: var(--prime); }
+
+  .applied-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--prime);
+    background: var(--prime-dim);
+    color: var(--prime);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 8px;
+  }
+
+  .applied-btn:hover { background: rgba(16,185,129,0.2); }
+  .applied-btn.applied { background: var(--prime); color: white; }
+
+  /* ── Timeline ── */
+  .timeline {
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 7px; top: 0; bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .timeline-event {
+    position: relative;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .timeline-event::before {
+    content: '';
+    position: absolute;
+    left: -16px; top: 5px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border2);
+  }
+
+  .timeline-event.current::before { background: var(--prime); }
+
+  .status-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .status-field label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+
+  .status-field select, .status-field textarea, .status-field input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 7px 10px;
+    outline: none;
+  }
+
+  .status-field select:focus, .status-field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .save-btn {
+    padding: 8px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    font-weight: 500;
+  }
+
+  .save-btn:hover { opacity: 0.85; }
+
+  /* ── Empty state ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state h3 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 400;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--prime);
+    color: var(--prime);
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 56px; }
+    .sidebar-logo, .nav-label, .nav-item span, .count-badge { display: none; }
+    .nav-item { justify-content: center; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .detail-panel { width: 100vw; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Job<br>Tracker</h1>
+      <p>Anurag Patil · 2025</p>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Views</div>
+      <button class="nav-item active" onclick="setView('all')">
+        <span class="nav-dot" style="background:#6b7280"></span>
+        <span>All jobs</span>
+        <span class="count-badge" id="cnt-all">0</span>
+      </button>
+      <button class="nav-item" onclick="setView('PRIME')">
+        <span class="nav-dot" style="background:#10b981"></span>
+        <span>Prime match</span>
+        <span class="count-badge" id="cnt-prime">0</span>
+      </button>
+      <button class="nav-item" onclick="setView('STRONG')">
+        <span class="nav-dot" style="background:#6366f1"></span>
+        <span>Strong</span>
+        <span class="count-badge" id="cnt-strong">0</span>
+      </button>
+      <button class="nav-item" onclick="setView('EXPLORE')">
+        <span class="nav-dot" style="background:#f59e0b"></span>
+        <span>Explore</span>
+        <span class="count-badge" id="cnt-explore">0</span>
+      </button>
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Applications</div>
+      <button class="nav-item" onclick="setView('applied')">
+        <span class="nav-dot" style="background:#a78bfa"></span>
+        <span>Applied</span>
+        <span class="count-badge" id="cnt-applied">0</span>
+      </button>
+      <button class="nav-item" onclick="setView('interview')">
+        <span class="nav-dot" style="background:#fb923c"></span>
+        <span>Interviews</span>
+        <span class="count-badge" id="cnt-interview">0</span>
+      </button>
+      <button class="nav-item" onclick="setView('offer')">
+        <span class="nav-dot" style="background:#34d399"></span>
+        <span>Offers</span>
+        <span class="count-badge" id="cnt-offer">0</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="view-title">All Jobs</h2>
+      <div class="topbar-actions">
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+        <button class="btn btn-prime" onclick="syncData()">↻ Refresh Data</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total fetched</div>
+          <div class="stat-accent" style="color:var(--muted)" id="stat-since">Loading...</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--prime)" id="stat-prime">0</div>
+          <div class="stat-label">Prime matches</div>
+          <div class="stat-accent" style="color:var(--prime)">Apply now</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#818cf8" id="stat-applied">0</div>
+          <div class="stat-label">Applied</div>
+          <div class="stat-accent" style="color:var(--muted)" id="stat-rate">— conversion</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#fb923c" id="stat-interviews">0</div>
+          <div class="stat-label">Interviews</div>
+          <div class="stat-accent" style="color:var(--muted)" id="stat-int-rate">— rate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#34d399" id="stat-offers">0</div>
+          <div class="stat-label">Offers</div>
+          <div class="stat-accent" style="color:var(--muted)">Keep going!</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-row">
+        <button class="filter-chip active" onclick="filterIndustry('all', this)">All industries</button>
+        <button class="filter-chip" onclick="filterIndustry('tech', this)">Tech</button>
+        <button class="filter-chip" onclick="filterIndustry('healthcare', this)">Healthcare</button>
+        <button class="filter-chip" onclick="filterIndustry('auto', this)">Automotive</button>
+        <button class="filter-chip" onclick="filterIndustry('finance', this)">Finance</button>
+        <input class="search-input" type="text" placeholder="Search jobs..." id="search-input" oninput="filterSearch(this.value)">
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Job</th>
+              <th>Location</th>
+              <th>Category</th>
+              <th>Score</th>
+              <th>Salary</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="jobs-tbody">
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <h3>No jobs loaded yet</h3>
+                  <p>Run the Python scheduler to fetch jobs from LinkedIn.<br>They'll appear here automatically once scored.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="overlay" id="overlay" onclick="closePanel(event)">
+  <div class="detail-panel" id="detail-panel">
+    <button class="panel-close" onclick="closeDetail()">✕</button>
+
+    <div id="panel-content">
+      <!-- Filled dynamically -->
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA LAYER
+// In production: loaded from SQLite via a small
+// Flask/FastAPI backend. For demo: localStorage.
+// ─────────────────────────────────────────────
+
+const STORAGE_KEY = 'jobtracker_jobs_v2';
+
+let ALL_JOBS = [];
+let currentView = 'all';
+let industryFilter = 'all';
+let searchQuery = '';
+let currentJobId = null;
+
+async function loadJobs() {
+  try {
+    const resp = await fetch('/api/jobs');
+    if (!resp.ok) throw new Error('API error');
+    return await resp.json();
+  } catch (e) {
+    console.warn('Could not reach API, falling back to sample data:', e);
+    return getSampleJobs();
+  }
+}
+
+function saveJobs() {
+  // no-op: data lives in the backend DB now
+}
+
+function getSampleJobs() {
+  return [
+    {
+      id: 'sample1',
+      title: 'Data Scientist',
+      company: 'Ford Motor Company',
+      location: 'Dearborn, MI (Hybrid)',
+      url: 'https://jobs.ford.com',
+      category: 'PRIME',
+      fit_score: 88,
+      salary_text: 'SG5–SG8 (~$120K–$165K)',
+      posted_date: '2026-01-13',
+      fetched_at: new Date().toISOString(),
+      status: 'ready',
+      applied_at: null,
+      interview_status: 'none',
+      notes: '',
+      fit_reasoning: {
+        top_matches: ['Python & SQL', 'Automotive domain 7+ yrs', 'Real-world data modeling', 'MS degree'],
+        gaps: ['No GCP listed', 'Production ML deploy partial'],
+        key_insight: 'Automotive background is a rare differentiator — Ford lists it as a bonus.',
+        interview_angle: 'Lead with 7 years of Ford-adjacent automotive work at Tata + Force Motors.'
+      },
+      tailored_bullets: {
+        abbvie_bullets: [
+          'Built indication-finding framework using embeddings, cosine similarity, and PCA to transform complex biological data into ranked, actionable insights for drug development teams',
+          'Developed object-oriented Python pipelines for large-scale patient data transformation and reproducible hypothesis testing (Chi-square, z-test) across cross-functional research teams',
+          'Collaborated with data engineering teams on ETL optimization using Apache Spark and Hadoop, ensuring model-ready data at enterprise scale on Cloudera CML and AWS',
+          'Deployed Python package on GitHub integrating feature selection, logistic regression, and Propensity Score Matching — reducing analysis setup time by 60%',
+          'Implemented statistical models assessing disease prevalence before and after drug administration, generating Real World Evidence aligned to OHDSI governance standards'
+        ]
+      },
+      cover_letter: `Hi,\n\nI'm applying for the Data Scientist role on Ford's Global Data Insight & Analytics team. What drew me to this posting specifically is the intersection of data science and automotive decision-making — a combination I've spent years working at the edges of and am ready to commit to fully.\n\nMy current work at AbbVie involves building analytical frameworks on large-scale real-world data: patient cohorts, hypothesis testing pipelines, embeddings-based similarity models, and cross-functional reporting to clinical and business stakeholders. The problems look different from Ford's, but the mechanics are the same — acquire messy data, build reproducible models, translate outputs into decisions that non-technical partners can act on.\n\nWhat makes me an unusual candidate for this role is my earlier career. Before transitioning into data science, I spent seven years in automotive engineering and analytics at Tata Technologies and Force Motors — working on steering systems, powertrain validation, and component failure prediction. I understand how vehicles are built, how engineering teams think, and how data gets used on the shop floor versus in a boardroom.\n\nThank you for your consideration.\n\nAnurag Patil\nanuragrp@uci.edu | 949-539-6028`
+    },
+    {
+      id: 'sample2',
+      title: 'Senior Healthcare Data Analyst',
+      company: 'Latica',
+      location: 'Palo Alto, CA (Hybrid)',
+      url: 'https://latica.ai',
+      category: 'PRIME',
+      fit_score: 94,
+      salary_text: '$120,000 – $150,000',
+      posted_date: '2026-01-15',
+      fetched_at: new Date().toISOString(),
+      status: 'ready',
+      applied_at: null,
+      interview_status: 'none',
+      notes: 'Confirm visa policy before applying',
+      fit_reasoning: {
+        top_matches: ['EHR/OMOP data daily', 'Patient cohort building', 'Python + SQL advanced', 'AWS cloud', 'Pharma collaboration'],
+        gaps: ['Visa policy unclear — confirm'],
+        key_insight: 'JD reads like it was written for Anurag\'s current role at AbbVie.',
+        interview_angle: 'Lead with OMOP/ICD/NDC expertise and patient cohort work at AbbVie — exact match.'
+      },
+      tailored_bullets: {
+        abbvie_bullets: [
+          'Built and maintained diverse patient cohorts using EHR/OMOP data, ICD-10 and NDC coding systems, enabling enriched data catalog development for downstream research teams',
+          'Designed end-to-end analytical pipelines from data acquisition and hypothesis protocol development through statistical analysis and publication-ready reporting deliverables',
+          'Collaborated with clinical and pharmaceutical teams to translate complex research questions into scoped data science problems, delivering scientifically credible outputs aligned to OHDSI governance',
+          'Developed reusable Python packages for cohort construction, hypothesis testing, and propensity score matching — reducing per-study setup from days to hours'
+        ]
+      },
+      cover_letter: `Hi,\n\nI'm excited to apply for the Senior Healthcare Data Analyst role at Latica. The mission — unlocking real-world health data to accelerate diagnostics and therapeutics — is the work I'm doing every day at AbbVie, and the chance to focus on it fully at a company built around that purpose is exactly the next step I'm looking for.\n\nAt AbbVie, I work as a Data Analyst embedded in clinical research, building patient cohorts and analytical pipelines on EHR data structured to the OMOP common data model, with fluency in ICD-10, NDC, and CPT coding systems. My day-to-day involves scoping data extraction protocols with clinical teams, building reproducible Python frameworks, and delivering outputs that meet both scientific rigor and pharmaceutical team timelines.\n\nI don't just query data — I help build the infrastructure around it. I've developed reusable Python packages for cohort construction, deployed models on AWS, and written documentation for both internal data consumers and external research audiences.\n\nThank you for considering my application.\n\nAnurag Patil\nanuragrp@uci.edu | 949-539-6028`
+    },
+    {
+      id: 'sample3',
+      title: 'ML Engineer – Healthcare',
+      company: 'Tempus AI',
+      location: 'Chicago, IL (Remote OK)',
+      url: 'https://tempus.com',
+      category: 'STRONG',
+      fit_score: 76,
+      salary_text: '$130,000 – $160,000',
+      posted_date: '2026-01-14',
+      fetched_at: new Date().toISOString(),
+      status: 'scored',
+      applied_at: null,
+      interview_status: 'none',
+      notes: '',
+      fit_reasoning: {
+        top_matches: ['Python ML stack', 'Healthcare data domain', 'NLP experience'],
+        gaps: ['MLOps/deployment ownership', 'Production pipeline at scale'],
+        key_insight: 'Strong core fit but role leans more toward ML engineering than analytics.',
+        interview_angle: 'Highlight the GitHub Python package deployment and AbbVie pipeline automation.'
+      },
+      tailored_bullets: null,
+      cover_letter: null
+    },
+    {
+      id: 'sample4',
+      title: 'Senior Data Analyst',
+      company: 'JPMorgan Chase',
+      location: 'Columbus, OH (Hybrid)',
+      url: 'https://jpmorgan.com',
+      category: 'STRONG',
+      fit_score: 71,
+      salary_text: '$115,000 – $140,000',
+      posted_date: '2026-01-12',
+      fetched_at: new Date().toISOString(),
+      status: 'scored',
+      applied_at: null,
+      interview_status: 'none',
+      notes: '',
+      fit_reasoning: {
+        top_matches: ['SQL advanced', 'Statistical modeling', 'Cross-functional reporting'],
+        gaps: ['Finance domain unfamiliar', 'Risk modeling specific'],
+        key_insight: 'Transferable skills are strong; finance domain is the gap to address.',
+        interview_angle: 'Frame RWE statistical work as analogous to financial risk modeling.'
+      },
+      tailored_bullets: null,
+      cover_letter: null
+    },
+    {
+      id: 'sample5',
+      title: 'Data Science Manager',
+      company: 'Amazon',
+      location: 'Seattle, WA',
+      url: 'https://amazon.jobs',
+      category: 'EXPLORE',
+      fit_score: 55,
+      salary_text: 'Not listed',
+      posted_date: '2026-01-11',
+      fetched_at: new Date().toISOString(),
+      status: 'scored',
+      applied_at: null,
+      interview_status: 'none',
+      notes: '',
+      fit_reasoning: {
+        top_matches: ['Python, SQL', 'Analytics pipeline experience'],
+        gaps: ['People management required', 'AWS at scale expected', 'Product analytics focus'],
+        key_insight: 'Role requires direct people management experience Anurag doesn\'t have yet.',
+        interview_angle: 'Lean on cross-functional leadership at Force Motors and Tata.'
+      },
+      tailored_bullets: null,
+      cover_letter: null
+    }
+  ];
+}
+
+// ─────────────────────────────────────────────
+// RENDERING
+// ─────────────────────────────────────────────
+
+function getFilteredJobs() {
+  return ALL_JOBS.filter(job => {
+    const viewMatch =
+      currentView === 'all' ? job.category !== 'SKIP' :
+      currentView === 'applied' ? job.applied_at :
+      currentView === 'interview' ? ['phone_screen','technical','final','offer'].includes(job.interview_status) :
+      currentView === 'offer' ? job.interview_status === 'offer' :
+      job.category === currentView;
+
+    const industryMatch =
+      industryFilter === 'all' ? true :
+      industryFilter === 'tech' ? /tech|software|engineer|ml|ai|data/i.test(job.company + job.title) :
+      industryFilter === 'healthcare' ? /health|pharma|medical|clinical|bio/i.test(job.company + job.title) :
+      industryFilter === 'auto' ? /motor|auto|ford|tata|vehicle/i.test(job.company + job.title) :
+      industryFilter === 'finance' ? /bank|finance|capital|morgan|financial/i.test(job.company + job.title) :
+      true;
+
+    const searchMatch =
+      searchQuery === '' ? true :
+      (job.title + job.company + job.location).toLowerCase().includes(searchQuery.toLowerCase());
+
+    return viewMatch && industryMatch && searchMatch;
+  });
+}
+
+function render() {
+  const jobs = getFilteredJobs();
+  const tbody = document.getElementById('jobs-tbody');
+
+  if (jobs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h3>No jobs in this view</h3><p>Try a different filter or wait for the next scrape cycle.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = jobs.map(job => {
+    const reasoning = job.fit_reasoning || {};
+    const scoreColor =
+      job.fit_score >= 85 ? 'var(--prime)' :
+      job.fit_score >= 65 ? 'var(--strong)' :
+      job.fit_score >= 40 ? 'var(--explore)' : 'var(--skip)';
+
+    const statusLabel = job.applied_at ? 'Applied' :
+      job.interview_status && job.interview_status !== 'none' ? '🎯 Interviewing' : '—';
+
+    return `
+      <tr>
+        <td>
+          <div class="job-title" onclick="openDetail('${job.id}')">${job.title}</div>
+          <div class="job-company">${job.company}</div>
+        </td>
+        <td class="job-location">${job.location}</td>
+        <td>
+          <span class="cat-pill cat-${job.category}">
+            ${catEmoji(job.category)} ${catLabel(job.category)}
+          </span>
+        </td>
+        <td>
+          <div class="score-wrap">
+            <div class="score-bar">
+              <div class="score-fill" style="width:${job.fit_score}%;background:${scoreColor}"></div>
+            </div>
+            <span class="score-num">${job.fit_score}</span>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${job.salary_text || '—'}</td>
+        <td>
+          <select class="status-select" onchange="updateInterviewStatus('${job.id}', this.value)">
+            <option value="none" ${job.interview_status==='none'||!job.interview_status?'selected':''}>No update</option>
+            <option value="phone_screen" ${job.interview_status==='phone_screen'?'selected':''}>Phone screen</option>
+            <option value="technical" ${job.interview_status==='technical'?'selected':''}>Technical</option>
+            <option value="final" ${job.interview_status==='final'?'selected':''}>Final round</option>
+            <option value="offer" ${job.interview_status==='offer'?'selected':''}>Offer received</option>
+            <option value="rejected" ${job.interview_status==='rejected'?'selected':''}>Rejected</option>
+          </select>
+        </td>
+        <td>
+          <button class="action-btn" onclick="openDetail('${job.id}')">View →</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  updateStats();
+  updateCounts();
+}
+
+function catLabel(cat) {
+  const m = { PRIME: 'Prime', STRONG: 'Strong', EXPLORE: 'Explore', SKIP: 'Skip' };
+  return m[cat] || cat;
+}
+
+function catEmoji(cat) {
+  const m = { PRIME: '🎯', STRONG: '💪', EXPLORE: '🔍', SKIP: '⏭' };
+  return m[cat] || '';
+}
+
+function updateStats() {
+  const all = ALL_JOBS;
+  const applied = all.filter(j => j.applied_at);
+  const interviews = all.filter(j => ['phone_screen','technical','final','offer'].includes(j.interview_status));
+  const offers = all.filter(j => j.interview_status === 'offer');
+  const prime = all.filter(j => j.category === 'PRIME');
+
+  document.getElementById('stat-total').textContent = all.length;
+  document.getElementById('stat-prime').textContent = prime.length;
+  document.getElementById('stat-applied').textContent = applied.length;
+  document.getElementById('stat-interviews').textContent = interviews.length;
+  document.getElementById('stat-offers').textContent = offers.length;
+
+  const convRate = applied.length > 0 ? Math.round((interviews.length / applied.length) * 100) : 0;
+  document.getElementById('stat-rate').textContent = applied.length > 0 ? `${convRate}% conversion` : '— conversion';
+  document.getElementById('stat-int-rate').textContent = interviews.length > 0 ? `of ${applied.length} applied` : '— rate';
+
+  const oldest = all.reduce((min, j) => j.fetched_at < min ? j.fetched_at : min, new Date().toISOString());
+  document.getElementById('stat-since').textContent = `Since ${oldest.slice(0,10)}`;
+}
+
+function updateCounts() {
+  document.getElementById('cnt-all').textContent = ALL_JOBS.filter(j => j.category !== 'SKIP').length;
+  document.getElementById('cnt-prime').textContent = ALL_JOBS.filter(j => j.category === 'PRIME').length;
+  document.getElementById('cnt-strong').textContent = ALL_JOBS.filter(j => j.category === 'STRONG').length;
+  document.getElementById('cnt-explore').textContent = ALL_JOBS.filter(j => j.category === 'EXPLORE').length;
+  document.getElementById('cnt-applied').textContent = ALL_JOBS.filter(j => j.applied_at).length;
+  document.getElementById('cnt-interview').textContent = ALL_JOBS.filter(j => ['phone_screen','technical','final','offer'].includes(j.interview_status)).length;
+  document.getElementById('cnt-offer').textContent = ALL_JOBS.filter(j => j.interview_status === 'offer').length;
+}
+
+// ─────────────────────────────────────────────
+// DETAIL PANEL
+// ─────────────────────────────────────────────
+
+function openDetail(jobId) {
+  currentJobId = jobId;
+  const job = ALL_JOBS.find(j => j.id === jobId);
+  if (!job) return;
+
+  const r = job.fit_reasoning || {};
+  const bullets = job.tailored_bullets;
+  const abbvieBullets = bullets?.abbvie_bullets || [];
+
+  const scoreColor =
+    job.fit_score >= 85 ? 'var(--prime)' :
+    job.fit_score >= 65 ? '#818cf8' :
+    job.fit_score >= 40 ? 'var(--explore)' : 'var(--skip)';
+
+  document.getElementById('panel-content').innerHTML = `
+    <span class="cat-pill cat-${job.category}" style="margin-bottom:12px;display:inline-flex">${catEmoji(job.category)} ${catLabel(job.category)}</span>
+    <h2 class="panel-title">${job.title}</h2>
+    <div class="panel-meta">${job.company} · ${job.location} · <span style="color:${scoreColor};font-weight:500">${job.fit_score}/100</span></div>
+
+    ${r.key_insight ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Key insight</div>
+      <div class="insight-box">"${r.key_insight}"</div>
+    </div>` : ''}
+
+    ${r.interview_angle ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Your angle for this application</div>
+      <div class="insight-box" style="border-color:var(--prime)">${r.interview_angle}</div>
+    </div>` : ''}
+
+    ${r.top_matches?.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Strong matches</div>
+      ${r.top_matches.map(m => `<span class="match-pill">${m}</span>`).join('')}
+    </div>` : ''}
+
+    ${r.gaps?.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Gaps to address</div>
+      ${r.gaps.map(g => `<span class="gap-pill">${g}</span>`).join('')}
+    </div>` : ''}
+
+    ${abbvieBullets.length ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Tailored resume bullets — AbbVie</div>
+      ${abbvieBullets.map(b => `<div class="resume-bullet">${b}</div>`).join('')}
+      <button class="copy-btn" onclick="copyBullets()">Copy all bullets</button>
+    </div>` : `
+    <div class="panel-section">
+      <div class="panel-section-title">Resume materials</div>
+      <p style="color:var(--muted);font-size:12px">Materials will be generated automatically for PRIME and STRONG jobs.<br>Or run the resume builder manually for this job.</p>
+    </div>`}
+
+    ${job.cover_letter ? `
+    <div class="panel-section">
+      <div class="panel-section-title">Cover letter</div>
+      <div class="cover-letter-box">${job.cover_letter}</div>
+      <button class="copy-btn" onclick="copyCoverLetter()">Copy cover letter</button>
+    </div>` : ''}
+
+    <div class="panel-section">
+      <div class="panel-section-title">Application tracking</div>
+      <div class="status-row">
+        <div class="status-field">
+          <label>Interview stage</label>
+          <select id="panel-interview-status" onchange="updateInterviewStatus('${job.id}', this.value)">
+            <option value="none" ${!job.interview_status||job.interview_status==='none'?'selected':''}>No update</option>
+            <option value="phone_screen" ${job.interview_status==='phone_screen'?'selected':''}>Phone screen scheduled</option>
+            <option value="technical" ${job.interview_status==='technical'?'selected':''}>Technical interview</option>
+            <option value="final" ${job.interview_status==='final'?'selected':''}>Final round</option>
+            <option value="offer" ${job.interview_status==='offer'?'selected':''}>Offer received!</option>
+            <option value="rejected" ${job.interview_status==='rejected'?'selected':''}>Rejected</option>
+          </select>
+        </div>
+        <div class="status-field">
+          <label>Applied date</label>
+          <input type="date" id="panel-applied-date" value="${job.applied_at ? job.applied_at.slice(0,10) : ''}">
+        </div>
+      </div>
+      <div class="status-field" style="margin-bottom:12px">
+        <label>Notes</label>
+        <textarea id="panel-notes" rows="3" style="resize:vertical">${job.notes || ''}</textarea>
+      </div>
+      <button class="applied-btn ${job.applied_at ? 'applied' : ''}" id="applied-btn" onclick="markApplied('${job.id}')">
+        ${job.applied_at ? '✓ Applied on ' + job.applied_at.slice(0,10) : 'Mark as Applied'}
+      </button>
+      <button class="save-btn" style="margin-top:10px;width:100%" onclick="saveStatus('${job.id}')">Save changes</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-section-title">Job listing</div>
+      <a href="${job.url}" target="_blank" style="color:var(--accent);font-size:13px">Open on LinkedIn →</a>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Fetched: ${job.fetched_at?.slice(0,16).replace('T',' ')} · Salary: ${job.salary_text || 'Not listed'}</div>
+    </div>
+  `;
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('open');
+  currentJobId = null;
+}
+
+function closePanel(e) {
+  if (e.target === document.getElementById('overlay')) closeDetail();
+}
+
+function markApplied(jobId) {
+  const job = ALL_JOBS.find(j => j.id === jobId);
+  if (!job) return;
+
+  if (job.applied_at) {
+    // Toggle off
+    job.applied_at = null;
+    document.getElementById('applied-btn').textContent = 'Mark as Applied';
+    document.getElementById('applied-btn').classList.remove('applied');
+  } else {
+    job.applied_at = new Date().toISOString();
+    const btn = document.getElementById('applied-btn');
+    btn.textContent = '✓ Applied on ' + job.applied_at.slice(0,10);
+    btn.classList.add('applied');
+  }
+
+  saveJobs();
+  render();
+  showToast('Application status updated!');
+}
+
+function saveStatus(jobId) {
+  const job = ALL_JOBS.find(j => j.id === jobId);
+  if (!job) return;
+
+  const dateEl = document.getElementById('panel-applied-date');
+  const notesEl = document.getElementById('panel-notes');
+
+  if (dateEl?.value) job.applied_at = dateEl.value;
+  if (notesEl) job.notes = notesEl.value;
+
+  saveJobs();
+  render();
+  showToast('Saved!');
+}
+
+function updateInterviewStatus(jobId, value) {
+  const job = ALL_JOBS.find(j => j.id === jobId);
+  if (!job) return;
+  job.interview_status = value;
+  saveJobs();
+  render();
+  showToast('Status updated');
+}
+
+function copyBullets() {
+  const job = ALL_JOBS.find(j => j.id === currentJobId);
+  if (!job?.tailored_bullets?.abbvie_bullets) return;
+  const text = job.tailored_bullets.abbvie_bullets.map(b => '• ' + b).join('\n');
+  navigator.clipboard.writeText(text).then(() => showToast('Bullets copied!'));
+}
+
+function copyCoverLetter() {
+  const job = ALL_JOBS.find(j => j.id === currentJobId);
+  if (!job?.cover_letter) return;
+  navigator.clipboard.writeText(job.cover_letter).then(() => showToast('Cover letter copied!'));
+}
+
+// ─────────────────────────────────────────────
+// NAVIGATION & FILTERING
+// ─────────────────────────────────────────────
+
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  const labels = {
+    all: 'All Jobs', PRIME: 'Prime Matches', STRONG: 'Strong Candidates',
+    EXPLORE: 'Worth Exploring', applied: 'Applied', interview: 'Interviews', offer: 'Offers'
+  };
+  document.getElementById('view-title').textContent = labels[view] || view;
+  render();
+}
+
+function filterIndustry(industry, el) {
+  industryFilter = industry;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function filterSearch(query) {
+  searchQuery = query;
+  render();
+}
+
+// ─────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────
+
+async function syncData() {
+  showToast('Fetching latest from database...');
+  ALL_JOBS = await loadJobs();
+  render();
+  showToast('Data refreshed!');
+}
+
+async function init() {
+  ALL_JOBS = await loadJobs();
+  render();
+}
+
+init();
+
+function exportCSV() {
+  const cols = ['title','company','location','category','fit_score','salary_text','applied_at','interview_status','notes'];
+  const rows = ALL_JOBS.map(j => cols.map(c => `"${(j[c]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [cols.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `jobs_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exported!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

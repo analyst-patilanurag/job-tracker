@@ -1,0 +1,18 @@
+# Sensitive config — never commit these
+config/config.json
+config/cookies.json
+
+# Database — contains your personal job data
+data/jobs.db
+
+# Logs
+logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# VS Code
+.vscode/

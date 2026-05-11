@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import sqlite3; conn=sqlite3.connect\\('data/jobs.db'\\); conn.execute\\('DELETE FROM jobs'\\); conn.commit\\(\\); print\\('Cleared'\\)\")",
+      "Bash(sed -i 's/FileHandler\\(\"logs\\\\/resume_builder.log\"\\)/FileHandler\\(\"logs\\\\/resume_builder.log\", encoding=\"utf-8\"\\)/' resume_builder.py)",
+      "Bash(sed -i 's/→ Materials generated/>> Materials generated/' resume_builder.py)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(pip install *)",
+      "Bash(dir \"D:\\\\Projects\\\\Job Tracker\\\\assets\\\\\")",
+      "Bash(ls -la \"/mnt/d/Projects/Job Tracker/assets/\")"
+    ]
+  }
+}
