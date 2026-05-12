@@ -11,7 +11,8 @@
       "Bash(ls -la \"/mnt/d/Projects/Job Tracker/assets/\")",
       "Bash(pandoc \"D:\\\\10_Job Applications\\\\2026-27\\\\Resume Anurag Patil.docx\" -o \"D:\\\\10_Job Applications\\\\2026-27\\\\resume_extracted.md\" --track-changes=all)",
       "Read(//d/10_Job Applications/2026-27/**)",
-      "Bash(pandoc \"D:\\\\10_Job Applications\\\\2026-27\\\\Cover Letter Lyft.docx\" -o \"D:\\\\10_Job Applications\\\\2026-27\\\\coverletter_extracted.md\" --track-changes=all)"
+      "Bash(pandoc \"D:\\\\10_Job Applications\\\\2026-27\\\\Cover Letter Lyft.docx\" -o \"D:\\\\10_Job Applications\\\\2026-27\\\\coverletter_extracted.md\" --track-changes=all)",
+      "Bash(python resume_builder.py)"
     ]
   }
 }

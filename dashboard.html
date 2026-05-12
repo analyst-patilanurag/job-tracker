@@ -821,8 +821,22 @@ async function loadJobs() {
   }
 }
 
+async function patchJob(jobId, data) {
+  try {
+    const resp = await fetch(`/api/jobs/${jobId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!resp.ok) throw new Error('API error');
+  } catch (e) {
+    console.error('Failed to save to database:', e);
+    showToast('Save failed — check that api.py is running', true);
+  }
+}
+
 function saveJobs() {
-  // no-op: data lives in the backend DB now
+  // no-op: saves now go directly to the API via patchJob()
 }
 
 function getSampleJobs() {
@@ -1209,7 +1223,7 @@ function closePanel(e) {
   if (e.target === document.getElementById('overlay')) closeDetail();
 }
 
-function markApplied(jobId) {
+async function markApplied(jobId) {
   const job = ALL_JOBS.find(j => j.id === jobId);
   if (!job) return;
 
@@ -1225,12 +1239,12 @@ function markApplied(jobId) {
     btn.classList.add('applied');
   }
 
-  saveJobs();
+  await patchJob(jobId, { applied_at: job.applied_at, status: job.applied_at ? 'applied' : 'scored' });
   render();
   showToast('Application status updated!');
 }
 
-function saveStatus(jobId) {
+async function saveStatus(jobId) {
   const job = ALL_JOBS.find(j => j.id === jobId);
   if (!job) return;
 
@@ -1240,16 +1254,20 @@ function saveStatus(jobId) {
   if (dateEl?.value) job.applied_at = dateEl.value;
   if (notesEl) job.notes = notesEl.value;
 
-  saveJobs();
+  await patchJob(jobId, {
+    applied_at: job.applied_at || null,
+    notes: job.notes || '',
+    status: job.applied_at ? 'applied' : 'scored'
+  });
   render();
   showToast('Saved!');
 }
 
-function updateInterviewStatus(jobId, value) {
+async function updateInterviewStatus(jobId, value) {
   const job = ALL_JOBS.find(j => j.id === jobId);
   if (!job) return;
   job.interview_status = value;
-  saveJobs();
+  await patchJob(jobId, { interview_status: value });
   render();
   showToast('Status updated');
 }
@@ -1326,11 +1344,12 @@ function exportCSV() {
   showToast('CSV exported!');
 }
 
-function showToast(msg) {
+function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
+  t.style.background = isError ? '#ef4444' : '';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  setTimeout(() => { t.classList.remove('show'); t.style.background = ''; }, isError ? 4000 : 2200);
 }
 
 // ─────────────────────────────────────────────
