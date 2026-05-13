@@ -748,6 +748,8 @@
         <button class="filter-chip" onclick="filterIndustry('healthcare', this)">Healthcare</button>
         <button class="filter-chip" onclick="filterIndustry('auto', this)">Automotive</button>
         <button class="filter-chip" onclick="filterIndustry('finance', this)">Finance</button>
+        <button class="filter-chip" id="hide-applied-btn" onclick="toggleHideApplied(this)" style="border-color:#10b981;color:#10b981">Hide Applied</button>
+        <button class="filter-chip" id="today-btn" onclick="toggleTodayOnly(this)" style="border-color:#6366f1;color:#6366f1">Today Only</button>
         <input class="search-input" type="text" placeholder="Search jobs..." id="search-input" oninput="filterSearch(this.value)">
       </div>
 
@@ -808,6 +810,8 @@ let ALL_JOBS = [];
 let currentView = 'all';
 let industryFilter = 'all';
 let searchQuery = '';
+let hideApplied = false;
+let todayOnly = false;
 let currentJobId = null;
 
 async function loadJobs() {
@@ -1004,8 +1008,29 @@ function getFilteredJobs() {
       searchQuery === '' ? true :
       (job.title + job.company + job.location).toLowerCase().includes(searchQuery.toLowerCase());
 
-    return viewMatch && industryMatch && searchMatch;
+    // Hide applied filter — disabled automatically when viewing the Applied tab
+    const appliedMatch = (hideApplied && currentView !== 'applied') ? !job.applied_at : true;
+
+    // Today only — matches jobs fetched today (local date)
+    const today = new Date().toISOString().slice(0, 10);
+    const todayMatch = todayOnly ? (job.fetched_at || '').slice(0, 10) === today : true;
+
+    return viewMatch && industryMatch && searchMatch && appliedMatch && todayMatch;
   });
+}
+
+function toggleHideApplied(btn) {
+  hideApplied = !hideApplied;
+  btn.classList.toggle('active', hideApplied);
+  btn.textContent = hideApplied ? '✓ Hiding Applied' : 'Hide Applied';
+  render();
+}
+
+function toggleTodayOnly(btn) {
+  todayOnly = !todayOnly;
+  btn.classList.toggle('active', todayOnly);
+  btn.textContent = todayOnly ? '✓ Today Only' : 'Today Only';
+  render();
 }
 
 function render() {
@@ -1024,14 +1049,24 @@ function render() {
       job.fit_score >= 65 ? 'var(--strong)' :
       job.fit_score >= 40 ? 'var(--explore)' : 'var(--skip)';
 
-    const statusLabel = job.applied_at ? 'Applied' :
-      job.interview_status && job.interview_status !== 'none' ? '🎯 Interviewing' : '—';
+    const appliedBadge = job.applied_at
+      ? `<span style="display:inline-block;margin-top:3px;font-size:11px;font-weight:600;color:#10b981;">✓ Applied ${job.applied_at.slice(0,10)}</span>`
+      : '';
+
+    const interviewOptions = `
+      <option value="none" ${job.interview_status==='none'||!job.interview_status?'selected':''}>—</option>
+      <option value="phone_screen" ${job.interview_status==='phone_screen'?'selected':''}>Phone screen</option>
+      <option value="technical" ${job.interview_status==='technical'?'selected':''}>Technical</option>
+      <option value="final" ${job.interview_status==='final'?'selected':''}>Final round</option>
+      <option value="offer" ${job.interview_status==='offer'?'selected':''}>Offer 🎉</option>
+      <option value="rejected" ${job.interview_status==='rejected'?'selected':''}>Rejected</option>`;
 
     return `
       <tr>
         <td>
           <div class="job-title" onclick="openDetail('${job.id}')">${job.title}</div>
           <div class="job-company">${job.company}</div>
+          ${appliedBadge}
         </td>
         <td class="job-location">${job.location}</td>
         <td>
@@ -1050,12 +1085,7 @@ function render() {
         <td style="font-size:12px;color:var(--muted)">${job.salary_text || '—'}</td>
         <td>
           <select class="status-select" onchange="updateInterviewStatus('${job.id}', this.value)">
-            <option value="none" ${job.interview_status==='none'||!job.interview_status?'selected':''}>No update</option>
-            <option value="phone_screen" ${job.interview_status==='phone_screen'?'selected':''}>Phone screen</option>
-            <option value="technical" ${job.interview_status==='technical'?'selected':''}>Technical</option>
-            <option value="final" ${job.interview_status==='final'?'selected':''}>Final round</option>
-            <option value="offer" ${job.interview_status==='offer'?'selected':''}>Offer received</option>
-            <option value="rejected" ${job.interview_status==='rejected'?'selected':''}>Rejected</option>
+            ${interviewOptions}
           </select>
         </td>
         <td>
@@ -1227,21 +1257,26 @@ async function markApplied(jobId) {
   const job = ALL_JOBS.find(j => j.id === jobId);
   if (!job) return;
 
+  const dateInput = document.getElementById('panel-applied-date');
+
   if (job.applied_at) {
-    // Toggle off
+    // Toggle OFF — clear everything
     job.applied_at = null;
     document.getElementById('applied-btn').textContent = 'Mark as Applied';
     document.getElementById('applied-btn').classList.remove('applied');
+    if (dateInput) dateInput.value = '';          // ← keep date input in sync
   } else {
+    // Toggle ON — set to today
     job.applied_at = new Date().toISOString();
     const btn = document.getElementById('applied-btn');
-    btn.textContent = '✓ Applied on ' + job.applied_at.slice(0,10);
+    btn.textContent = '✓ Applied on ' + job.applied_at.slice(0, 10);
     btn.classList.add('applied');
+    if (dateInput) dateInput.value = job.applied_at.slice(0, 10); // ← keep date input in sync
   }
 
   await patchJob(jobId, { applied_at: job.applied_at, status: job.applied_at ? 'applied' : 'scored' });
   render();
-  showToast('Application status updated!');
+  showToast(job.applied_at ? 'Marked as applied!' : 'Removed applied status.');
 }
 
 async function saveStatus(jobId) {
